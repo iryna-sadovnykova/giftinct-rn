@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  useWindowDimensions,
   ViewStyle,
 } from 'react-native';
 import { Colors } from '../constants/colors';
@@ -18,7 +17,6 @@ export type OptionPillProps = {
   selected?: boolean;
   onPress: () => void;
   columns?: 1 | 2;
-  containerHorizontalPadding?: number;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
@@ -29,39 +27,29 @@ export const OptionPill: React.FC<OptionPillProps> = ({
   selected = false,
   onPress,
   columns = 1,
-  containerHorizontalPadding = Spacing.lg * 2,
   style,
   testID,
-}) => {
-  const { width } = useWindowDimensions();
-  const gap = Spacing.sm;
-  const pillWidth =
-    columns === 2
-      ? Math.floor((width - containerHorizontalPadding - gap) / 2)
-      : undefined;
-
-  return (
-    <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      activeOpacity={0.8}
-      onPress={onPress}
-      style={[
-        styles.pill,
-        pillWidth != null ? { width: pillWidth } : styles.fullWidth,
-        selected && styles.pillSelected,
-        style,
-      ]}
-      testID={testID}>
-      {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
-      <Text
-        numberOfLines={1}
-        style={[styles.label, selected && styles.labelSelected]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-};
+}) => (
+  <TouchableOpacity
+    accessibilityRole="button"
+    accessibilityState={{ selected }}
+    activeOpacity={0.8}
+    onPress={onPress}
+    style={[
+      styles.pill,
+      columns === 2 ? styles.halfWidth : styles.fullWidth,
+      selected && styles.pillSelected,
+      style,
+    ]}
+    testID={testID}>
+    {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
+    <Text
+      numberOfLines={1}
+      style={[styles.label, selected && styles.labelSelected]}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
   pill: {
@@ -88,6 +76,10 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     alignSelf: 'stretch',
+    width: '100%',
+  },
+  halfWidth: {
+    width: '48%',
   },
   pillSelected: {
     backgroundColor: Colors.primaryLight,

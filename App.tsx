@@ -1,7 +1,4 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
  * @format
  */
 
@@ -12,7 +9,7 @@ import { StatusBar, StyleSheet, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { antdTheme } from './src/constants/colors';
-import { ComponentShowcaseScreen } from './src/screens/ComponentShowcaseScreen';
+import { AppNavigation } from './src/navigation';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -22,7 +19,8 @@ function App() {
       <SafeAreaProvider>
         <Provider theme={antdTheme}>
           <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-          <ComponentShowcaseScreen />
+          {/* NavigationContainer wraps Stack → Drawer → Tab navigators */}
+          <AppNavigation />
         </Provider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

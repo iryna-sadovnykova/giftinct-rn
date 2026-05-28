@@ -1,4 +1,3 @@
-import Button from '@ant-design/react-native/lib/button';
 import Card from '@ant-design/react-native/lib/card';
 import React from 'react';
 import {

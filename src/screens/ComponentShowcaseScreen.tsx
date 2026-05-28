@@ -23,8 +23,6 @@ import { Colors } from '../constants/colors';
 import { Radius, Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
 
-const SECTION_HORIZONTAL_PADDING = (Spacing.lg + Spacing.md) * 2;
-
 const RELATIONSHIP_OPTIONS = [
   { id: 'partner', label: 'Romantic partner', emoji: '💖' },
   { id: 'friend', label: 'Friend', emoji: '🤝' },
@@ -233,7 +231,6 @@ export const ComponentShowcaseScreen: React.FC = () => {
             {OCCASION_OPTIONS.map(opt => (
               <OptionPill
                 columns={2}
-                containerHorizontalPadding={SECTION_HORIZONTAL_PADDING}
                 emoji={opt.emoji}
                 key={opt.id}
                 label={opt.label}

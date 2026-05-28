@@ -6,15 +6,35 @@ import {
   StyleProp,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
 import { Colors } from '../constants/colors';
-import { Spacing } from '../constants/spacing';
+import { Radius, Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
 
 const Item = List.Item;
 const Brief = List.Item.Brief;
+
+/** Strip Ant Design List hairlines — outer card border replaces them. */
+const LIST_STYLES = {
+  List: { backgroundColor: 'transparent' },
+  Body: { borderTopWidth: 0 },
+  BodyBottomLine: { height: 0 },
+};
+
+const ITEM_STYLES = {
+  Item: {
+    backgroundColor: 'transparent',
+    paddingLeft: 0,
+  },
+  Line: {
+    borderBottomWidth: 0,
+    paddingRight: 0,
+    paddingVertical: 0,
+  },
+};
 
 export type GifteeCardProps = {
   name: string;
@@ -46,28 +66,51 @@ export const GifteeCard: React.FC<GifteeCardProps> = ({
     </View>
   );
 
+  const content = (
+    <List styles={LIST_STYLES}>
+      <Item
+        arrow={onPress ? 'horizontal' : 'empty'}
+        extra={<Text style={styles.relationship}>{relationship}</Text>}
+        multipleLine
+        styles={ITEM_STYLES}
+        thumb={thumb}>
+        <Text style={styles.name}>{name}</Text>
+        <Brief>
+          <Text style={styles.birthday}>Birthday: {birthday}</Text>
+        </Brief>
+      </Item>
+    </List>
+  );
+
+  if (!onPress) {
+    return (
+      <View style={[styles.wrapper, style]} testID={testID}>
+        {content}
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.wrapper, style]} testID={testID}>
-      <List>
-        <Item
-          arrow={onPress ? 'horizontal' : 'empty'}
-          extra={<Text style={styles.relationship}>{relationship}</Text>}
-          multipleLine
-          onPress={onPress}
-          thumb={thumb}>
-          <Text style={styles.name}>{name}</Text>
-          <Brief>
-            <Text style={styles.birthday}>Birthday: {birthday}</Text>
-          </Brief>
-        </Item>
-      </List>
-    </View>
+    <TouchableOpacity
+      accessibilityRole="button"
+      activeOpacity={0.7}
+      onPress={onPress}
+      style={[styles.wrapper, style]}
+      testID={testID}>
+      {content}
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   wrapper: {
     backgroundColor: Colors.background,
+    borderColor: Colors.borderThin,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
   },
   avatar: {
     borderRadius: 28,

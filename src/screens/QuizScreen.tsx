@@ -1,0 +1,227 @@
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useMemo, useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { InputField } from '../components/InputField';
+import { OptionPill } from '../components/OptionPill';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { QuestionHeader } from '../components/QuestionHeader';
+import { SecondaryButton } from '../components/SecondaryButton';
+import { Spacing } from '../constants/spacing';
+import {
+  getQuizStep,
+  TOTAL_QUIZ_STEPS,
+} from '../data/quizSteps';
+import { Colors } from '../constants/colors';
+import { QuizStackParamList, QuizAnswers, RootStackParamList } from '../navigation/types';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type Props = NativeStackScreenProps<QuizStackParamList, 'QuizStep'>;
+
+/** Single quiz step — reads `step` and `answers` from route.params. */
+export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { step, answers: initialAnswers } = route.params;
+  const config = getQuizStep(step)!;
+
+  const [answers, setAnswers] = useState<QuizAnswers>(initialAnswers);
+  const [textValue, setTextValue] = useState(
+    String(initialAnswers[config.answerKey] ?? ''),
+  );
+
+  const rootNav = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
+
+  const selectedSingle = useMemo(() => {
+    const val = answers[config.answerKey];
+    return typeof val === 'string' ? val : undefined;
+  }, [answers, config.answerKey]);
+
+  const selectedMulti = useMemo(() => {
+    const val = answers[config.answerKey];
+    return Array.isArray(val) ? new Set(val) : new Set<string>();
+  }, [answers, config.answerKey]);
+
+  const canProceed = config.optional || config.type === 'multi'
+    ? true
+    : config.type === 'text' || config.type === 'number'
+      ? textValue.trim().length > 0
+      : Boolean(selectedSingle);
+
+  const goNext = (nextAnswers: QuizAnswers) => {
+    if (step >= TOTAL_QUIZ_STEPS) {
+      // Quiz complete — sign up then show gift results (pass answers via params).
+      rootNav?.navigate('SignUp', { answers: nextAnswers });
+      return;
+    }
+    // Push the next step so swipe-back returns to this answer.
+    navigation.push('QuizStep', { step: step + 1, answers: nextAnswers });
+  };
+
+  const handleNext = () => {
+    let next = { ...answers };
+    if (config.type === 'text' || config.type === 'number') {
+      next = { ...next, [config.answerKey]: textValue };
+    }
+    goNext(next);
+  };
+
+  const toggleMulti = (id: string) => {
+    const current = Array.isArray(answers[config.answerKey])
+      ? [...(answers[config.answerKey] as string[])]
+      : [];
+    const idx = current.indexOf(id);
+    if (idx >= 0) {
+      current.splice(idx, 1);
+    } else {
+      current.push(id);
+    }
+    setAnswers({ ...answers, [config.answerKey]: current });
+  };
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled">
+        <QuestionHeader
+          question={config.question}
+          step={step}
+          subtitle={config.subtitle}
+          totalSteps={TOTAL_QUIZ_STEPS}
+        />
+
+        {config.type === 'single' && config.options ? (
+          <View style={styles.options}>
+            {config.options.map(opt => (
+              <OptionPill
+                columns={config.columns}
+                emoji={opt.emoji}
+                key={opt.id}
+                label={opt.label}
+                onPress={() =>
+                  setAnswers({
+                    ...answers,
+                    [config.answerKey]: opt.id,
+                  })
+                }
+                selected={selectedSingle === opt.id}
+                style={styles.pill}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        {config.type === 'multi' && config.options ? (
+          <View
+            style={[
+              styles.pillGrid,
+              config.columns === 1 && styles.options,
+            ]}>
+            {config.options.map(opt => (
+              <OptionPill
+                columns={config.columns ?? 2}
+                emoji={opt.emoji}
+                key={opt.id}
+                label={opt.label}
+                onPress={() => toggleMulti(opt.id)}
+                selected={selectedMulti.has(opt.id)}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        {config.type === 'number' ? (
+          <InputField
+            keyboardType="number-pad"
+            label="Age"
+            onChangeText={setTextValue}
+            placeholder={config.placeholder}
+            value={textValue}
+          />
+        ) : null}
+
+        {config.type === 'text' ? (
+          <TextInput
+            multiline
+            onChangeText={setTextValue}
+            placeholder={config.placeholder}
+            placeholderTextColor={Colors.textPlaceholder}
+            style={styles.textarea}
+            textAlignVertical="top"
+            value={textValue}
+          />
+        ) : null}
+
+        <View style={styles.actions}>
+          {step > 1 ? (
+            <View style={styles.actionHalf}>
+              <SecondaryButton
+                onPress={() => navigation.goBack()}
+                title="Back"
+              />
+            </View>
+          ) : null}
+          <View style={step > 1 ? styles.actionHalf : styles.actionFull}>
+            <PrimaryButton
+              disabled={!canProceed}
+              onPress={handleNext}
+              title={
+                config.ctaLabel ??
+                (step >= TOTAL_QUIZ_STEPS ? 'See the results' : 'Next')
+              }
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safe: {
+    backgroundColor: Colors.background,
+    flex: 1,
+  },
+  scroll: {
+    paddingBottom: Spacing.xxxl,
+    paddingHorizontal: Spacing.lg,
+  },
+  options: {
+    gap: Spacing.sm,
+    width: '100%',
+  },
+  pillGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    width: '100%',
+  },
+  pill: {
+    marginBottom: 0,
+  },
+  textarea: {
+    backgroundColor: Colors.surface,
+    borderColor: Colors.border,
+    borderRadius: 4,
+    borderWidth: 1,
+    color: Colors.text,
+    fontSize: 16,
+    minHeight: 120,
+    padding: Spacing.md,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.xl,
+  },
+  actionHalf: {
+    flex: 1,
+  },
+  actionFull: {
+    flex: 1,
+  },
+});
