@@ -1,0 +1,33 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/DelaGothicOne-Regular.ttf",
+      "sha1": "2b6b7b551edff0a3936c6fc00d4da86bceb6d089"
+    },
+    {
+      "path": "assets/fonts/Inter-Bold.ttf",
+      "sha1": "9461e7c083137c2abe6d198f784fb0d341a527a1"
+    },
+    {
+      "path": "assets/fonts/Inter-Medium.ttf",
+      "sha1": "c1d25d8c10adb45a970e71c387bbd6380f10992d"
+    },
+    {
+      "path": "assets/fonts/Inter-Regular.ttf",
+      "sha1": "6e3430f906a4b42b4b63fd8f33e498a43d9f8d84"
+    },
+    {
+      "path": "assets/fonts/Inter-SemiBold.ttf",
+      "sha1": "b4bdaf6bdd6a479b46c452a7bbae13f5cb2079bf"
+    },
+    {
+      "path": "node_modules/@ant-design/icons-react-native/fonts/antfill.ttf",
+      "sha1": "56960e7721fc92b62e0f7c4d131ffe34ed042c49"
+    },
+    {
+      "path": "node_modules/@ant-design/icons-react-native/fonts/antoutline.ttf",
+      "sha1": "66720607b7496a48f145425386b2082b73662fd1"
+    }
+  ]
+}
