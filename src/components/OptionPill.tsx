@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Platform,
   StyleProp,
   StyleSheet,
   Text,
-  TouchableOpacity,
   ViewStyle,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { Colors } from '../constants/colors';
 import { Radius, Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
+import { animateLayout } from '../animations/layout';
+import { ScalePressable } from './ScalePressable';
 
 export type OptionPillProps = {
   label: string;
@@ -29,27 +35,52 @@ export const OptionPill: React.FC<OptionPillProps> = ({
   columns = 1,
   style,
   testID,
-}) => (
-  <TouchableOpacity
-    accessibilityRole="button"
-    accessibilityState={{ selected }}
-    activeOpacity={0.8}
-    onPress={onPress}
-    style={[
-      styles.pill,
-      columns === 2 ? styles.halfWidth : styles.fullWidth,
-      selected && styles.pillSelected,
-      style,
-    ]}
-    testID={testID}>
-    {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
-    <Text
-      numberOfLines={1}
-      style={[styles.label, selected && styles.labelSelected]}>
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
+}) => {
+  const selectionScale = useSharedValue(selected ? 1 : 1);
+
+  useEffect(() => {
+    if (selected) {
+      selectionScale.value = withSpring(1.03, { damping: 12, stiffness: 350 });
+    } else {
+      selectionScale.value = withSpring(1, { damping: 12, stiffness: 350 });
+    }
+  }, [selected, selectionScale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: selectionScale.value }],
+  }));
+
+  const handlePress = () => {
+    animateLayout();
+    onPress();
+  };
+
+  return (
+    <ScalePressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={handlePress}
+      style={[
+        columns === 2 ? styles.halfWidth : styles.fullWidth,
+        style,
+      ]}
+      testID={testID}>
+      <Animated.View
+        style={[
+          styles.pill,
+          selected && styles.pillSelected,
+          animatedStyle,
+        ]}>
+        {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
+        <Text
+          numberOfLines={1}
+          style={[styles.label, selected && styles.labelSelected]}>
+          {label}
+        </Text>
+      </Animated.View>
+    </ScalePressable>
+  );
+};
 
 const styles = StyleSheet.create({
   pill: {

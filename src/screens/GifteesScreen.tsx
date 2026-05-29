@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApiStateView } from '../components/ApiStateView';
+import { FadeInView } from '../components/FadeInView';
 import { GifteeCard } from '../components/GifteeCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -28,21 +29,22 @@ export const GifteesScreen: React.FC<Props> = () => {
         loadingMessage="Loading giftees..."
         onRetry={refetch}>
         <ScrollView contentContainerStyle={styles.scroll}>
-          {giftees.map(giftee => (
-            <GifteeCard
-              avatar={
-                giftee.avatarUrl ? { uri: giftee.avatarUrl } : undefined
-              }
-              birthday={giftee.birthday}
-              initials={giftee.initials}
-              key={giftee.id}
-              name={giftee.name}
-              onPress={() =>
-                getRootNav()?.navigate('GifteeDetail', { gifteeId: giftee.id })
-              }
-              relationship={giftee.relationship}
-              style={styles.card}
-            />
+          {giftees.map((giftee, index) => (
+            <FadeInView delay={index * 50} duration={350} key={giftee.id}>
+              <GifteeCard
+                avatar={
+                  giftee.avatarUrl ? { uri: giftee.avatarUrl } : undefined
+                }
+                birthday={giftee.birthday}
+                initials={giftee.initials}
+                name={giftee.name}
+                onPress={() =>
+                  getRootNav()?.navigate('GifteeDetail', { gifteeId: giftee.id })
+                }
+                relationship={giftee.relationship}
+                style={styles.card}
+              />
+            </FadeInView>
           ))}
           <PrimaryButton
             onPress={() => getRootNav()?.navigate('QuizFlow')}

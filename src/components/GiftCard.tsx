@@ -1,21 +1,28 @@
 import Card from '@ant-design/react-native/lib/card';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Image,
   ImageSourcePropType,
+  Pressable,
   StyleProp,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
 import { Colors } from '../constants/colors';
 import { Radius, Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
 import { PrimaryButton } from './PrimaryButton';
 
 const IMAGE_HEIGHT = 180;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export type GiftCardProps = {
   title: string;
@@ -41,54 +48,68 @@ export const GiftCard: React.FC<GiftCardProps> = ({
   onPressSave,
   style,
   testID,
-}) => (
-  <View testID={testID}>
-    <Card style={StyleSheet.flatten([styles.card, style])}>
-      <View style={styles.imageWrapper}>
-        {image ? (
-          <Image
-            resizeMode="cover"
-            source={image}
-            style={styles.image}
+}) => {
+  const heartScale = useSharedValue(1);
+  const wasSaved = useRef(saved);
+
+  useEffect(() => {
+    if (saved && !wasSaved.current) {
+      heartScale.value = withSequence(
+        withSpring(1.35, { damping: 8, stiffness: 400 }),
+        withSpring(1, { damping: 10, stiffness: 300 }),
+      );
+    }
+    wasSaved.current = saved;
+  }, [saved, heartScale]);
+
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+  }));
+
+  return (
+    <View testID={testID}>
+      <Card style={StyleSheet.flatten([styles.card, style])}>
+        <View style={styles.imageWrapper}>
+          {image ? (
+            <Image resizeMode="cover" source={image} style={styles.image} />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Text style={styles.imagePlaceholderIcon}>🎁</Text>
+            </View>
+          )}
+          {onPressSave ? (
+            <AnimatedPressable
+              accessibilityLabel={saved ? 'Remove from saved' : 'Save gift'}
+              accessibilityRole="button"
+              accessibilityState={{ selected: saved }}
+              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+              onPress={onPressSave}
+              style={[styles.saveButton, heartStyle]}>
+              <Text style={[styles.saveIcon, saved && styles.saveIconActive]}>
+                {saved ? '♥' : '♡'}
+              </Text>
+            </AnimatedPressable>
+          ) : null}
+        </View>
+        <View style={styles.body}>
+          <Text numberOfLines={2} style={styles.title}>
+            {title}
+          </Text>
+          <Text style={styles.price}>{price}</Text>
+          <Text style={styles.description}>
+            <Text style={styles.sparkle}>✨ </Text>
+            {description}
+          </Text>
+          <PrimaryButton
+            onPress={onPressCta}
+            style={styles.cta}
+            title={ctaLabel}
           />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Text style={styles.imagePlaceholderIcon}>🎁</Text>
-          </View>
-        )}
-        {onPressSave ? (
-          <TouchableOpacity
-            accessibilityLabel={saved ? 'Remove from saved' : 'Save gift'}
-            accessibilityRole="button"
-            accessibilityState={{ selected: saved }}
-            activeOpacity={0.8}
-            hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-            onPress={onPressSave}
-            style={styles.saveButton}>
-            <Text style={[styles.saveIcon, saved && styles.saveIconActive]}>
-              {saved ? '♥' : '♡'}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-      <View style={styles.body}>
-        <Text numberOfLines={2} style={styles.title}>
-          {title}
-        </Text>
-        <Text style={styles.price}>{price}</Text>
-        <Text style={styles.description}>
-          <Text style={styles.sparkle}>✨ </Text>
-          {description}
-        </Text>
-        <PrimaryButton
-          onPress={onPressCta}
-          style={styles.cta}
-          title={ctaLabel}
-        />
-      </View>
-    </Card>
-  </View>
-);
+        </View>
+      </Card>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {

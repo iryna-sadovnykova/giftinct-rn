@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { Colors } from '../constants/colors';
 import { Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
@@ -18,6 +22,8 @@ type ApiStateViewProps = {
   children: React.ReactNode;
 };
 
+type ViewMode = 'loading' | 'error' | 'content';
+
 export const ApiStateView: React.FC<ApiStateViewProps> = ({
   loading,
   error,
@@ -25,32 +31,48 @@ export const ApiStateView: React.FC<ApiStateViewProps> = ({
   onRetry,
   children,
 }) => {
-  if (loading) {
+  const mode: ViewMode = loading ? 'loading' : error ? 'error' : 'content';
+  const opacity = useSharedValue(mode === 'content' ? 1 : 0);
+
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 280 });
+  }, [mode, opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  if (mode === 'loading') {
     return (
-      <View style={styles.centered}>
+      <Animated.View style={[styles.centered, animatedStyle]}>
         <ActivityIndicator color={Colors.primary} size="large" />
         <Text style={styles.loadingText}>{loadingMessage}</Text>
-      </View>
+      </Animated.View>
     );
   }
 
-  if (error) {
+  if (mode === 'error') {
     return (
-      <View style={styles.centered}>
+      <Animated.View style={[styles.centered, animatedStyle]}>
         <Text style={styles.errorText}>{error}</Text>
         {onRetry ? (
           <TouchableOpacity onPress={onRetry} style={styles.retryButton}>
             <Text style={styles.retryText}>Try again</Text>
           </TouchableOpacity>
         ) : null}
-      </View>
+      </Animated.View>
     );
   }
 
-  return <>{children}</>;
+  return (
+    <Animated.View style={[styles.content, animatedStyle]}>{children}</Animated.View>
+  );
 };
 
 const styles = StyleSheet.create({
+  content: {
+    flex: 1,
+  },
   centered: {
     alignItems: 'center',
     flex: 1,

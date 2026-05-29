@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Spacing } from '../constants/spacing';
+import { FadeInView } from './FadeInView';
 import { GiftCard, GiftCardProps } from './GiftCard';
 
 export type GiftListItem = Omit<GiftCardProps, 'onPressCta' | 'onPressSave'> & {
@@ -35,12 +36,14 @@ export const GiftList: React.FC<GiftListProps> = ({
   style,
 }) => {
   const renderItem: ListRenderItem<GiftListItem> = useCallback(
-    ({ item }) => (
-      <GiftCard
-        {...item}
-        onPressCta={() => onPressGift(item)}
-        onPressSave={onSaveGift ? () => onSaveGift(item) : undefined}
-      />
+    ({ item, index }) => (
+      <FadeInView delay={index * 60} duration={350}>
+        <GiftCard
+          {...item}
+          onPressCta={() => onPressGift(item)}
+          onPressSave={onSaveGift ? () => onSaveGift(item) : undefined}
+        />
+      </FadeInView>
     ),
     [onPressGift, onSaveGift],
   );

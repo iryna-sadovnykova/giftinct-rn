@@ -6,13 +6,13 @@ import {
   StyleProp,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
 import { Colors } from '../constants/colors';
 import { Radius, Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
+import { ScalePressable } from './ScalePressable';
 
 const Item = List.Item;
 const Brief = List.Item.Brief;
@@ -93,14 +93,13 @@ export const GifteeCard: React.FC<GifteeCardProps> = ({
   }
 
   return (
-    <TouchableOpacity
+    <ScalePressable
       accessibilityRole="button"
-      activeOpacity={0.7}
       onPress={onPress}
       style={[styles.wrapper, style]}
       testID={testID}>
       {content}
-    </TouchableOpacity>
+    </ScalePressable>
   );
 };
 

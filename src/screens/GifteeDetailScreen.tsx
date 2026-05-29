@@ -9,7 +9,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { animateLayout } from '../animations/layout';
 import { ApiStateView } from '../components/ApiStateView';
+import { FadeInView } from '../components/FadeInView';
 import { GiftList } from '../components/GiftList';
 import { InterestTag } from '../components/InterestTag';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -95,6 +97,11 @@ export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     refetchGifts();
   };
 
+  const handleTabChange = (tab: DetailTab) => {
+    animateLayout();
+    setActiveTab(tab);
+  };
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <ScreenHeader
@@ -106,7 +113,7 @@ export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         {DETAIL_TABS.map(tab => (
           <TouchableOpacity
             key={tab.key}
-            onPress={() => setActiveTab(tab.key)}
+            onPress={() => handleTabChange(tab.key)}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}>
             <Text
               style={[
@@ -131,7 +138,8 @@ export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         ) : null}
 
         {giftee && activeTab === 'profile' ? (
-          <ScrollView contentContainerStyle={styles.scroll}>
+          <FadeInView animationKey="profile" duration={300}>
+            <ScrollView contentContainerStyle={styles.scroll}>
             <View style={styles.profileHeader}>
               {giftee.avatarUrl ? (
                 <View style={styles.profileAvatarClip}>
@@ -195,11 +203,13 @@ export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                 <Text style={styles.notes}>{giftee.notes}</Text>
               </>
             ) : null}
-          </ScrollView>
+            </ScrollView>
+          </FadeInView>
         ) : null}
 
         {giftee && (activeTab === 'saved' || activeTab === 'ideas') ? (
-          <GiftList
+          <FadeInView animationKey={activeTab} duration={300} style={styles.listPane}>
+            <GiftList
             data={listData}
             ListHeaderComponent={
               activeTab === 'ideas' ? (
@@ -215,6 +225,7 @@ export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             }}
             onSaveGift={item => toggleSaved(item.id)}
           />
+          </FadeInView>
         ) : null}
       </ApiStateView>
     </SafeAreaView>
@@ -347,5 +358,8 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.heading,
     fontSize: FontSize.title,
     marginBottom: Spacing.md,
+  },
+  listPane: {
+    flex: 1,
   },
 });

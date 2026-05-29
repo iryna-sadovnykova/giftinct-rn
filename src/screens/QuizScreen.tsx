@@ -7,6 +7,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { animateLayout } from '../animations/layout';
+import { FadeInView } from '../components/FadeInView';
 import { InputField } from '../components/InputField';
 import { OptionPill } from '../components/OptionPill';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -70,6 +72,7 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const toggleMulti = (id: string) => {
+    animateLayout();
     const current = Array.isArray(answers[config.answerKey])
       ? [...(answers[config.answerKey] as string[])]
       : [];
@@ -87,95 +90,98 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled">
-        <QuestionHeader
-          question={config.question}
-          step={step}
-          subtitle={config.subtitle}
-          totalSteps={TOTAL_QUIZ_STEPS}
-        />
-
-        {config.type === 'single' && config.options ? (
-          <View style={styles.options}>
-            {config.options.map(opt => (
-              <OptionPill
-                columns={config.columns}
-                emoji={opt.emoji}
-                key={opt.id}
-                label={opt.label}
-                onPress={() =>
-                  setAnswers({
-                    ...answers,
-                    [config.answerKey]: opt.id,
-                  })
-                }
-                selected={selectedSingle === opt.id}
-                style={styles.pill}
-              />
-            ))}
-          </View>
-        ) : null}
-
-        {config.type === 'multi' && config.options ? (
-          <View
-            style={[
-              styles.pillGrid,
-              config.columns === 1 && styles.options,
-            ]}>
-            {config.options.map(opt => (
-              <OptionPill
-                columns={config.columns ?? 2}
-                emoji={opt.emoji}
-                key={opt.id}
-                label={opt.label}
-                onPress={() => toggleMulti(opt.id)}
-                selected={selectedMulti.has(opt.id)}
-              />
-            ))}
-          </View>
-        ) : null}
-
-        {config.type === 'number' ? (
-          <InputField
-            keyboardType="number-pad"
-            label="Age"
-            onChangeText={setTextValue}
-            placeholder={config.placeholder}
-            value={textValue}
+        <FadeInView animationKey={step} duration={320} slideOffset={20}>
+          <QuestionHeader
+            question={config.question}
+            step={step}
+            subtitle={config.subtitle}
+            totalSteps={TOTAL_QUIZ_STEPS}
           />
-        ) : null}
 
-        {config.type === 'text' ? (
-          <TextInput
-            multiline
-            onChangeText={setTextValue}
-            placeholder={config.placeholder}
-            placeholderTextColor={Colors.textPlaceholder}
-            style={styles.textarea}
-            textAlignVertical="top"
-            value={textValue}
-          />
-        ) : null}
-
-        <View style={styles.actions}>
-          {step > 1 ? (
-            <View style={styles.actionHalf}>
-              <SecondaryButton
-                onPress={() => navigation.goBack()}
-                title="Back"
-              />
+          {config.type === 'single' && config.options ? (
+            <View style={styles.options}>
+              {config.options.map(opt => (
+                <OptionPill
+                  columns={config.columns}
+                  emoji={opt.emoji}
+                  key={opt.id}
+                  label={opt.label}
+                  onPress={() => {
+                    animateLayout();
+                    setAnswers({
+                      ...answers,
+                      [config.answerKey]: opt.id,
+                    });
+                  }}
+                  selected={selectedSingle === opt.id}
+                  style={styles.pill}
+                />
+              ))}
             </View>
           ) : null}
-          <View style={step > 1 ? styles.actionHalf : styles.actionFull}>
-            <PrimaryButton
-              disabled={!canProceed}
-              onPress={handleNext}
-              title={
-                config.ctaLabel ??
-                (step >= TOTAL_QUIZ_STEPS ? 'See the results' : 'Next')
-              }
+
+          {config.type === 'multi' && config.options ? (
+            <View
+              style={[
+                styles.pillGrid,
+                config.columns === 1 && styles.options,
+              ]}>
+              {config.options.map(opt => (
+                <OptionPill
+                  columns={config.columns ?? 2}
+                  emoji={opt.emoji}
+                  key={opt.id}
+                  label={opt.label}
+                  onPress={() => toggleMulti(opt.id)}
+                  selected={selectedMulti.has(opt.id)}
+                />
+              ))}
+            </View>
+          ) : null}
+
+          {config.type === 'number' ? (
+            <InputField
+              keyboardType="number-pad"
+              label="Age"
+              onChangeText={setTextValue}
+              placeholder={config.placeholder}
+              value={textValue}
             />
+          ) : null}
+
+          {config.type === 'text' ? (
+            <TextInput
+              multiline
+              onChangeText={setTextValue}
+              placeholder={config.placeholder}
+              placeholderTextColor={Colors.textPlaceholder}
+              style={styles.textarea}
+              textAlignVertical="top"
+              value={textValue}
+            />
+          ) : null}
+
+          <View style={styles.actions}>
+            {step > 1 ? (
+              <View style={styles.actionHalf}>
+                <SecondaryButton
+                  onPress={() => navigation.goBack()}
+                  title="Back"
+                />
+              </View>
+            ) : null}
+            <View style={step > 1 ? styles.actionHalf : styles.actionFull}>
+              <PrimaryButton
+                disabled={!canProceed}
+                onPress={handleNext}
+                title={
+                  config.ctaLabel ??
+                  (step >= TOTAL_QUIZ_STEPS ? 'See the results' : 'Next')
+                }
+              />
+            </View>
           </View>
-        </View>
+        </FadeInView>
       </ScrollView>
     </SafeAreaView>
   );

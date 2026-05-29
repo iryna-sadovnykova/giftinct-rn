@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@ant-design/react-native/lib/icon';
 import { ApiStateView } from '../components/ApiStateView';
+import { FadeInView } from '../components/FadeInView';
 import { GifteeCard } from '../components/GifteeCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -63,26 +64,28 @@ export const HomeScreen: React.FC<Props> = ({ navigation: tabNavigation }) => {
         onRetry={refetch}>
         <ScrollView contentContainerStyle={styles.scroll}>
           {featured ? (
-            <View style={styles.eventCard}>
-              <Text style={styles.eventLabel}>Next Event</Text>
-              <Text style={styles.eventTitle}>{featured.name}'s Birthday</Text>
-              <Text style={styles.eventDate}>
-                {featured.birthday}
-                {featured.daysUntilBirthday != null
-                  ? ` (${featured.daysUntilBirthday} days left)`
-                  : ''}
-              </Text>
-              <PrimaryButton
-                onPress={() =>
-                  getRootNav()?.navigate('GifteeDetail', {
-                    gifteeId: featured.id,
-                    initialTab: 'ideas',
-                  })
-                }
-                style={styles.eventCta}
-                title="Find a gift"
-              />
-            </View>
+            <FadeInView duration={400}>
+              <View style={styles.eventCard}>
+                <Text style={styles.eventLabel}>Next Event</Text>
+                <Text style={styles.eventTitle}>{featured.name}'s Birthday</Text>
+                <Text style={styles.eventDate}>
+                  {featured.birthday}
+                  {featured.daysUntilBirthday != null
+                    ? ` (${featured.daysUntilBirthday} days left)`
+                    : ''}
+                </Text>
+                <PrimaryButton
+                  onPress={() =>
+                    getRootNav()?.navigate('GifteeDetail', {
+                      gifteeId: featured.id,
+                      initialTab: 'ideas',
+                    })
+                  }
+                  style={styles.eventCta}
+                  title="Find a gift"
+                />
+              </View>
+            </FadeInView>
           ) : null}
 
           <View style={styles.sectionHeader}>
@@ -92,21 +95,22 @@ export const HomeScreen: React.FC<Props> = ({ navigation: tabNavigation }) => {
             </TouchableOpacity>
           </View>
 
-          {previewGiftees.map(giftee => (
-            <GifteeCard
-              avatar={
-                giftee.avatarUrl ? { uri: giftee.avatarUrl } : undefined
-              }
-              birthday={giftee.birthday}
-              initials={giftee.initials}
-              key={giftee.id}
-              name={giftee.name}
-              onPress={() =>
-                getRootNav()?.navigate('GifteeDetail', { gifteeId: giftee.id })
-              }
-              relationship={giftee.relationship}
-              style={styles.gifteeCard}
-            />
+          {previewGiftees.map((giftee, index) => (
+            <FadeInView delay={80 + index * 60} duration={350} key={giftee.id}>
+              <GifteeCard
+                avatar={
+                  giftee.avatarUrl ? { uri: giftee.avatarUrl } : undefined
+                }
+                birthday={giftee.birthday}
+                initials={giftee.initials}
+                name={giftee.name}
+                onPress={() =>
+                  getRootNav()?.navigate('GifteeDetail', { gifteeId: giftee.id })
+                }
+                relationship={giftee.relationship}
+                style={styles.gifteeCard}
+              />
+            </FadeInView>
           ))}
 
           <PrimaryButton
