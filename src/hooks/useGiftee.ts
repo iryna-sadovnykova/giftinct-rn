@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchGifteeById } from '../api/client';
+import { getApiErrorMessage } from '../api/errors';
 import { Giftee } from '../types/giftee';
 
 type UseGifteeResult = {
@@ -22,7 +23,7 @@ export const useGiftee = (gifteeId: string): UseGifteeResult => {
       const data = await fetchGifteeById(gifteeId);
       setGiftee(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load giftee');
+      setError(getApiErrorMessage(err, 'giftee'));
     } finally {
       setLoading(false);
     }

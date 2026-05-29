@@ -22,7 +22,11 @@ export const GifteesScreen: React.FC<Props> = () => {
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <ScreenHeader title="Giftees" />
-      <ApiStateView error={error} loading={loading} onRetry={refetch}>
+      <ApiStateView
+        error={error}
+        loading={loading}
+        loadingMessage="Loading giftees..."
+        onRetry={refetch}>
         <ScrollView contentContainerStyle={styles.scroll}>
           {giftees.map(giftee => (
             <GifteeCard

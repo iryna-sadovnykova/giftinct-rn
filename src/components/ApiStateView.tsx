@@ -13,6 +13,7 @@ import { FontFamily, FontSize } from '../constants/typography';
 type ApiStateViewProps = {
   loading: boolean;
   error: string | null;
+  loadingMessage?: string;
   onRetry?: () => void;
   children: React.ReactNode;
 };
@@ -20,6 +21,7 @@ type ApiStateViewProps = {
 export const ApiStateView: React.FC<ApiStateViewProps> = ({
   loading,
   error,
+  loadingMessage = 'Loading...',
   onRetry,
   children,
 }) => {
@@ -27,6 +29,7 @@ export const ApiStateView: React.FC<ApiStateViewProps> = ({
     return (
       <View style={styles.centered}>
         <ActivityIndicator color={Colors.primary} size="large" />
+        <Text style={styles.loadingText}>{loadingMessage}</Text>
       </View>
     );
   }
@@ -53,6 +56,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: Spacing.lg,
+  },
+  loadingText: {
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.body,
+    marginTop: Spacing.md,
+    textAlign: 'center',
   },
   errorText: {
     color: Colors.textSecondary,

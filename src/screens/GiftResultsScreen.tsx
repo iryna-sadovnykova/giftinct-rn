@@ -47,7 +47,11 @@ export const GiftResultsScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <ScreenHeader onBack={() => navigation.goBack()} title="Gift ideas" />
-      <ApiStateView error={error} loading={loading} onRetry={refetch}>
+      <ApiStateView
+        error={error}
+        loading={loading}
+        loadingMessage="Loading gift ideas..."
+        onRetry={refetch}>
         <GiftList
           ListHeaderComponent={
             <Text style={styles.header}>{giftResultsTitle(answers)}</Text>

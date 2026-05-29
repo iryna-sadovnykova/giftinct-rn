@@ -119,7 +119,11 @@ export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         ))}
       </View>
 
-      <ApiStateView error={error} loading={loading} onRetry={refetch}>
+      <ApiStateView
+        error={error}
+        loading={loading}
+        loadingMessage="Loading profile..."
+        onRetry={refetch}>
         {!giftee && !loading && !error ? (
           <View style={styles.notFound}>
             <Text style={styles.notFoundText}>Giftee not found</Text>

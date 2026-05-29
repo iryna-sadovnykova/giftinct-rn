@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchGifts } from '../api/client';
+import { getApiErrorMessage } from '../api/errors';
 import { MappedGift } from '../api/mappers';
 
 type UseGiftsResult = {
@@ -22,7 +23,7 @@ export const useGifts = (): UseGiftsResult => {
       const data = await fetchGifts();
       setGifts(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load gifts');
+      setError(getApiErrorMessage(err, 'gifts'));
     } finally {
       setLoading(false);
     }

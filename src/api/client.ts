@@ -16,11 +16,17 @@ class ApiError extends Error {
 }
 
 const fetchJson = async <T>(url: string): Promise<T> => {
-  const response = await fetch(url);
+  let response: Response;
+
+  try {
+    response = await fetch(url);
+  } catch {
+    throw new ApiError('Network request failed');
+  }
 
   if (!response.ok) {
     throw new ApiError(
-      `Request failed (${response.status})`,
+      `HTTP ${response.status} ${response.statusText || 'Error'}`.trim(),
       response.status,
     );
   }

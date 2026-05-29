@@ -56,7 +56,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation: tabNavigation }) => {
         }
         title="Giftinct"
       />
-      <ApiStateView error={error} loading={loading} onRetry={refetch}>
+      <ApiStateView
+        error={error}
+        loading={loading}
+        loadingMessage="Loading giftees..."
+        onRetry={refetch}>
         <ScrollView contentContainerStyle={styles.scroll}>
           {featured ? (
             <View style={styles.eventCard}>
