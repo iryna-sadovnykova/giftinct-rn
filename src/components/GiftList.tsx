@@ -12,6 +12,7 @@ import { GiftCard, GiftCardProps } from './GiftCard';
 
 export type GiftListItem = Omit<GiftCardProps, 'onPressCta' | 'onPressSave'> & {
   id: string;
+  ctaUrl?: string;
 };
 
 export type GiftListProps = {

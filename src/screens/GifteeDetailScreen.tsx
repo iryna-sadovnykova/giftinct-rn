@@ -1,6 +1,7 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,14 +9,17 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ApiStateView } from '../components/ApiStateView';
 import { GiftList } from '../components/GiftList';
 import { InterestTag } from '../components/InterestTag';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Colors } from '../constants/colors';
 import { Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
-import { getGifteeById, MOCK_GIFTS } from '../data/mockData';
+import { useGiftee } from '../hooks/useGiftee';
+import { useGifts } from '../hooks/useGifts';
 import { RootStackParamList } from '../navigation/types';
+import { openExternalUrl } from '../utils/openExternalUrl';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GifteeDetail'>;
 
@@ -33,17 +37,46 @@ const DETAIL_TABS: { key: DetailTab; label: string }[] = [
  */
 export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { gifteeId, initialTab = 'profile' } = route.params;
-  const giftee = getGifteeById(gifteeId);
+  const {
+    giftee,
+    loading: gifteeLoading,
+    error: gifteeError,
+    refetch: refetchGiftee,
+  } = useGiftee(gifteeId);
+  const {
+    gifts,
+    loading: giftsLoading,
+    error: giftsError,
+    refetch: refetchGifts,
+  } = useGifts();
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const savedInitialized = useRef(false);
 
-  if (!giftee) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <ScreenHeader onBack={() => navigation.goBack()} title="Not found" />
-      </SafeAreaView>
-    );
-  }
+  useEffect(() => {
+    if (!savedInitialized.current && gifts.length > 0) {
+      setSavedIds(
+        new Set(gifts.filter(gift => gift.saved).map(gift => gift.id)),
+      );
+      savedInitialized.current = true;
+    }
+  }, [gifts]);
+
+  const loading = gifteeLoading || giftsLoading;
+  const error = gifteeError ?? giftsError;
+
+  const listData = useMemo(() => {
+    const withSaved = gifts.map(item => ({
+      ...item,
+      saved: savedIds.has(item.id) || item.saved,
+    }));
+
+    if (activeTab === 'saved') {
+      return withSaved.filter(item => item.saved);
+    }
+
+    return withSaved;
+  }, [activeTab, gifts, savedIds]);
 
   const toggleSaved = (id: string) => {
     setSavedIds(prev => {
@@ -57,11 +90,18 @@ export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   };
 
+  const refetch = () => {
+    refetchGiftee();
+    refetchGifts();
+  };
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
-      <ScreenHeader onBack={() => navigation.goBack()} title={giftee.name} />
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        title={giftee?.name ?? 'Giftee'}
+      />
 
-      {/* Sub-tabs: Profile | Saved gifts | Gift ideas */}
       <View style={styles.tabRow}>
         {DETAIL_TABS.map(tab => (
           <TouchableOpacity
@@ -79,68 +119,100 @@ export const GifteeDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         ))}
       </View>
 
-      {activeTab === 'profile' ? (
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <ProfileRow label="Relationship" value={giftee.relationship} />
-          <ProfileRow label="Age" value={giftee.age?.toString() ?? '—'} />
-          <ProfileRow label="Gender" value={giftee.gender ?? '—'} />
-          <ProfileRow label="Birthday" value={giftee.birthdayFull ?? giftee.birthday} />
-
-          <Text style={styles.sectionHeading}>Interests</Text>
-          <View style={styles.tagRow}>
-            {giftee.interests.map(label => (
-              <InterestTag key={label} label={label} />
-            ))}
+      <ApiStateView error={error} loading={loading} onRetry={refetch}>
+        {!giftee && !loading && !error ? (
+          <View style={styles.notFound}>
+            <Text style={styles.notFoundText}>Giftee not found</Text>
           </View>
+        ) : null}
 
-          {giftee.personality ? (
-            <>
-              <Text style={styles.sectionHeading}>Personality</Text>
-              <View style={styles.tagRow}>
-                {giftee.personality.map(label => (
-                  <InterestTag key={label} label={label} />
-                ))}
-              </View>
-            </>
-          ) : null}
+        {giftee && activeTab === 'profile' ? (
+          <ScrollView contentContainerStyle={styles.scroll}>
+            <View style={styles.profileHeader}>
+              {giftee.avatarUrl ? (
+                <View style={styles.profileAvatarClip}>
+                  <Image
+                    resizeMode="cover"
+                    source={{ uri: giftee.avatarUrl }}
+                    style={styles.profileAvatarImage}
+                  />
+                </View>
+              ) : (
+                <View style={[styles.profileAvatarClip, styles.profileAvatarFallback]}>
+                  <Text style={styles.profileAvatarInitials}>
+                    {giftee.initials ?? giftee.name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <Text style={styles.profileName}>{giftee.name}</Text>
+              <Text style={styles.profileRelationship}>{giftee.relationship}</Text>
+            </View>
 
-          {giftee.giftTypes ? (
-            <>
-              <Text style={styles.sectionHeading}>Kinds of gifts</Text>
-              <View style={styles.tagRow}>
-                {giftee.giftTypes.map(label => (
-                  <InterestTag key={label} label={label} />
-                ))}
-              </View>
-            </>
-          ) : null}
+            <ProfileRow label="Relationship" value={giftee.relationship} />
+            <ProfileRow label="Age" value={giftee.age?.toString() ?? '—'} />
+            <ProfileRow label="Gender" value={giftee.gender ?? '—'} />
+            <ProfileRow
+              label="Birthday"
+              value={giftee.birthdayFull ?? giftee.birthday}
+            />
 
-          {giftee.notes ? (
-            <>
-              <Text style={styles.sectionHeading}>Additional information</Text>
-              <Text style={styles.notes}>{giftee.notes}</Text>
-            </>
-          ) : null}
-        </ScrollView>
-      ) : null}
+            <Text style={styles.sectionHeading}>Interests</Text>
+            <View style={styles.tagRow}>
+              {giftee.interests.map(label => (
+                <InterestTag key={label} label={label} />
+              ))}
+            </View>
 
-      {activeTab === 'saved' || activeTab === 'ideas' ? (
-        <GiftList
-          data={MOCK_GIFTS.map(item => ({
-            ...item,
-            saved: savedIds.has(item.id),
-          }))}
-          ListHeaderComponent={
-            activeTab === 'ideas' ? (
-              <Text style={styles.listHeader}>
-                Gift ideas for {giftee.name}
-              </Text>
-            ) : undefined
-          }
-          onPressGift={() => undefined}
-          onSaveGift={item => toggleSaved(item.id)}
-        />
-      ) : null}
+            {giftee.personality?.length ? (
+              <>
+                <Text style={styles.sectionHeading}>Personality</Text>
+                <View style={styles.tagRow}>
+                  {giftee.personality.map(label => (
+                    <InterestTag key={label} label={label} />
+                  ))}
+                </View>
+              </>
+            ) : null}
+
+            {giftee.giftTypes?.length ? (
+              <>
+                <Text style={styles.sectionHeading}>Kinds of gifts</Text>
+                <View style={styles.tagRow}>
+                  {giftee.giftTypes.map(label => (
+                    <InterestTag key={label} label={label} />
+                  ))}
+                </View>
+              </>
+            ) : null}
+
+            {giftee.notes ? (
+              <>
+                <Text style={styles.sectionHeading}>Additional information</Text>
+                <Text style={styles.notes}>{giftee.notes}</Text>
+              </>
+            ) : null}
+          </ScrollView>
+        ) : null}
+
+        {giftee && (activeTab === 'saved' || activeTab === 'ideas') ? (
+          <GiftList
+            data={listData}
+            ListHeaderComponent={
+              activeTab === 'ideas' ? (
+                <Text style={styles.listHeader}>
+                  Gift ideas for {giftee.name}
+                </Text>
+              ) : undefined
+            }
+            onPressGift={item => {
+              if (item.ctaUrl) {
+                openExternalUrl(item.ctaUrl);
+              }
+            }}
+            onSaveGift={item => toggleSaved(item.id)}
+          />
+        ) : null}
+      </ApiStateView>
     </SafeAreaView>
   );
 };
@@ -185,6 +257,53 @@ const styles = StyleSheet.create({
   scroll: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxxl,
+  },
+  profileHeader: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  profileAvatarClip: {
+    borderRadius: 48,
+    height: 96,
+    overflow: 'hidden',
+    width: 96,
+  },
+  profileAvatarImage: {
+    height: '100%',
+    width: '100%',
+  },
+  profileAvatarFallback: {
+    alignItems: 'center',
+    backgroundColor: Colors.primaryLight,
+    justifyContent: 'center',
+  },
+  profileAvatarInitials: {
+    color: Colors.primaryDark,
+    fontFamily: FontFamily.bodyBold,
+    fontSize: FontSize.title,
+  },
+  profileName: {
+    color: Colors.text,
+    fontFamily: FontFamily.heading,
+    fontSize: FontSize.title,
+    marginTop: Spacing.md,
+  },
+  profileRelationship: {
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.body,
+    marginTop: Spacing.xxs,
+  },
+  notFound: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    padding: Spacing.lg,
+  },
+  notFoundText: {
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.body,
   },
   profileRow: {
     flexDirection: 'row',

@@ -59,7 +59,9 @@ export const GifteeCard: React.FC<GifteeCardProps> = ({
 }) => {
   const fallbackInitials = initials ?? name.charAt(0).toUpperCase();
   const thumb = avatar ? (
-    <Image source={avatar} style={styles.avatar} />
+    <View style={styles.avatarClip}>
+      <Image resizeMode="cover" source={avatar} style={styles.avatarImage} />
+    </View>
   ) : (
     <View style={[styles.avatar, styles.avatarFallback]}>
       <Text style={styles.avatarInitials}>{fallbackInitials}</Text>
@@ -117,6 +119,17 @@ const styles = StyleSheet.create({
     height: 56,
     marginRight: Spacing.sm,
     width: 56,
+  },
+  avatarClip: {
+    borderRadius: 28,
+    height: 56,
+    marginRight: Spacing.sm,
+    overflow: 'hidden',
+    width: 56,
+  },
+  avatarImage: {
+    height: '100%',
+    width: '100%',
   },
   avatarFallback: {
     alignItems: 'center',

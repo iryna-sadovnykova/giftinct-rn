@@ -46,7 +46,11 @@ export const GiftCard: React.FC<GiftCardProps> = ({
     <Card style={StyleSheet.flatten([styles.card, style])}>
       <View style={styles.imageWrapper}>
         {image ? (
-          <Image resizeMode="cover" source={image} style={styles.image} />
+          <Image
+            resizeMode="cover"
+            source={image}
+            style={styles.image}
+          />
         ) : (
           <View style={styles.imagePlaceholder}>
             <Text style={styles.imagePlaceholderIcon}>🎁</Text>
@@ -89,9 +93,13 @@ export const GiftCard: React.FC<GiftCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     overflow: 'hidden',
+    width: '100%',
   },
   imageWrapper: {
+    alignSelf: 'stretch',
+    backgroundColor: Colors.primaryLight,
     position: 'relative',
+    width: '100%',
   },
   image: {
     height: IMAGE_HEIGHT,
