@@ -1,6 +1,7 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,10 +13,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { InputField } from '../components/InputField';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { SocialAuthButton } from '../components/SocialAuthButton';
+import {
+  SocialAuthButton,
+  SocialProvider,
+} from '../components/SocialAuthButton';
 import { Colors } from '../constants/colors';
 import { Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
+import { useAuth } from '../context/AuthContext';
 import { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
@@ -23,16 +28,52 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 /** Sign-up screen — receives quiz answers via route.params when coming from the quiz. */
 export const SignUpScreen: React.FC<Props> = ({ navigation, route }) => {
   const { answers } = route.params;
+  const { signUp, loginWithSocial } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSignUp = () => {
-    // Pass collected quiz answers forward to the gift results screen.
+  const navigateAfterAuth = () => {
     if (answers) {
       navigation.navigate('GiftResults', { answers });
     } else {
       navigation.navigate('Main');
+    }
+  };
+
+  const completeSignUp = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Sign up failed', 'Passwords do not match');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await signUp({ email, password });
+      navigateAfterAuth();
+    } catch (err) {
+      Alert.alert(
+        'Sign up failed',
+        err instanceof Error ? err.message : 'Please try again',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSocialSignUp = async (provider: SocialProvider) => {
+    setSubmitting(true);
+    try {
+      await loginWithSocial(provider);
+      navigateAfterAuth();
+    } catch (err) {
+      Alert.alert(
+        'Sign up failed',
+        err instanceof Error ? err.message : 'Please try again',
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -78,20 +119,27 @@ export const SignUpScreen: React.FC<Props> = ({ navigation, route }) => {
           />
 
           <PrimaryButton
-            onPress={handleSignUp}
+            disabled={submitting}
+            onPress={completeSignUp}
             style={styles.cta}
-            title="Sign up"
+            title={submitting ? 'Creating account...' : 'Sign up'}
           />
 
           <Text style={styles.divider}>or</Text>
-          <SocialAuthButton onPress={handleSignUp} provider="google" />
           <SocialAuthButton
-            onPress={handleSignUp}
+            disabled={submitting}
+            onPress={() => handleSocialSignUp('google')}
+            provider="google"
+          />
+          <SocialAuthButton
+            disabled={submitting}
+            onPress={() => handleSocialSignUp('facebook')}
             provider="facebook"
             style={styles.social}
           />
           <SocialAuthButton
-            onPress={handleSignUp}
+            disabled={submitting}
+            onPress={() => handleSocialSignUp('apple')}
             provider="apple"
             style={styles.social}
           />

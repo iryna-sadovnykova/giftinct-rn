@@ -10,6 +10,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/colors';
 import { Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
+import { useAuth } from '../context/AuthContext';
 
 const drawerIcon =
   (name: 'home' | 'crown' | 'question-circle' | 'logout') =>
@@ -24,9 +25,11 @@ export const CustomDrawerContent: React.FC<DrawerContentComponentProps> = ({
   navigation,
   state,
 }) => {
+  const { user, logout, isAuthenticated } = useAuth();
   const activeRoute = state.routes[state.index]?.name;
 
   const resetToWelcome = () => {
+    logout();
     const root = navigation.getParent();
     root?.dispatch(
       CommonActions.reset({
@@ -36,6 +39,10 @@ export const CustomDrawerContent: React.FC<DrawerContentComponentProps> = ({
     );
   };
 
+  const displayName = user
+    ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`
+    : 'Guest';
+
   return (
     <DrawerContentScrollView
       contentContainerStyle={styles.scroll}
@@ -43,6 +50,9 @@ export const CustomDrawerContent: React.FC<DrawerContentComponentProps> = ({
       <View style={styles.header}>
         <Text style={styles.logo}>Giftinct</Text>
         <Text style={styles.tagline}>Thoughtful gifts, every time</Text>
+        {isAuthenticated ? (
+          <Text style={styles.userGreeting}>Signed in as {displayName}</Text>
+        ) : null}
       </View>
 
       <DrawerItem
@@ -104,6 +114,12 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.body,
     fontSize: FontSize.small,
     marginTop: Spacing.xxs,
+  },
+  userGreeting: {
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.small,
+    marginTop: Spacing.sm,
   },
   itemLabel: {
     fontFamily: FontFamily.bodyMedium,

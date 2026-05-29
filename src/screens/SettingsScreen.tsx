@@ -1,5 +1,5 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -16,6 +16,7 @@ import { SecondaryButton } from '../components/SecondaryButton';
 import { Colors } from '../constants/colors';
 import { Radius, Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
+import { useAuth } from '../context/AuthContext';
 import { useRootNavigation } from '../navigation/hooks';
 import { MainTabParamList } from '../navigation/types';
 
@@ -32,13 +33,36 @@ const SETTINGS_TABS: { key: SettingsTab; label: string }[] = [
 /** Settings tab — Account, Notifications, Giftinct+ sub-sections from the design. */
 export const SettingsScreen: React.FC<Props> = () => {
   const getRootNav = useRootNavigation();
+  const { user, isAuthenticated, updateProfile, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [pushEvents, setPushEvents] = useState(true);
   const [emailEvents, setEmailEvents] = useState(false);
   const [pushNews, setPushNews] = useState(true);
   const [emailNews, setEmailNews] = useState(true);
   const [pushDeals, setPushDeals] = useState(false);
   const [emailDeals, setEmailDeals] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.firstName);
+      setLastName(user.lastName);
+      setEmail(user.email);
+      setPhoneNumber(user.phoneNumber ?? '');
+    }
+  }, [user]);
+
+  const handleSaveProfile = () => {
+    updateProfile({ firstName, lastName, email, phoneNumber });
+  };
+
+  const handleDeleteAccount = () => {
+    logout();
+    getRootNav()?.navigate('Welcome');
+  };
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
@@ -64,30 +88,44 @@ export const SettingsScreen: React.FC<Props> = () => {
       <ScrollView contentContainerStyle={styles.scroll}>
         {activeTab === 'account' ? (
           <>
-            <InputField label="First Name" onChangeText={() => undefined} value="Kevin" />
+            {!isAuthenticated ? (
+              <Text style={styles.signInPrompt}>
+                Log in to view and edit your account details.
+              </Text>
+            ) : null}
+            <InputField
+              editable={isAuthenticated}
+              label="First Name"
+              onChangeText={setFirstName}
+              value={firstName}
+            />
             <InputField
               containerStyle={styles.field}
+              editable={isAuthenticated}
               label="Last Name"
-              onChangeText={() => undefined}
-              value="Brown"
+              onChangeText={setLastName}
+              value={lastName}
             />
             <InputField
               autoCapitalize="none"
               containerStyle={styles.field}
+              editable={isAuthenticated}
               keyboardType="email-address"
               label="Email"
-              onChangeText={() => undefined}
-              value="kevin.brown@gmail.com"
+              onChangeText={setEmail}
+              value={email}
             />
             <InputField
               containerStyle={styles.field}
+              editable={isAuthenticated}
               keyboardType="phone-pad"
               label="Phone Number"
-              onChangeText={() => undefined}
-              value="+1 (646) 980-48-03"
+              onChangeText={setPhoneNumber}
+              value={phoneNumber}
             />
             <InputField
               containerStyle={styles.field}
+              editable={isAuthenticated}
               label="Password"
               onChangeText={() => undefined}
               secureTextEntry
@@ -95,14 +133,21 @@ export const SettingsScreen: React.FC<Props> = () => {
             />
             <InputField
               containerStyle={styles.field}
+              editable={isAuthenticated}
               label="Repeat Password"
               onChangeText={() => undefined}
               secureTextEntry
               value="passwordtest"
             />
-            <PrimaryButton onPress={() => undefined} style={styles.cta} title="Save changes" />
+            <PrimaryButton
+              disabled={!isAuthenticated}
+              onPress={handleSaveProfile}
+              style={styles.cta}
+              title="Save changes"
+            />
             <SecondaryButton
-              onPress={() => undefined}
+              disabled={!isAuthenticated}
+              onPress={handleDeleteAccount}
               style={styles.cta}
               title="Delete account"
             />
@@ -268,6 +313,12 @@ const styles = StyleSheet.create({
   scroll: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxxl,
+  },
+  signInPrompt: {
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.body,
+    marginBottom: Spacing.md,
   },
   field: {
     marginTop: Spacing.md,
