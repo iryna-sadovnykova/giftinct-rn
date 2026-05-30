@@ -21,15 +21,33 @@ const initialState: GifteesState = {
 
 export const fetchGiftees = createAsyncThunk<
   Giftee[],
-  void,
-  { rejectValue: string }
->('giftees/fetchAll', async (_, { rejectWithValue }) => {
-  try {
-    return await fetchGifteesApi();
-  } catch (err) {
-    return rejectWithValue(getApiErrorMessage(err, 'giftees'));
-  }
-});
+  { force?: boolean } | void,
+  { rejectValue: string; state: StateWithGiftees }
+>(
+  'giftees/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await fetchGifteesApi();
+    } catch (err) {
+      return rejectWithValue(getApiErrorMessage(err, 'giftees'));
+    }
+  },
+  {
+    condition: (arg, { getState }) => {
+      const force = arg && typeof arg === 'object' ? arg.force : false;
+      if (force) {
+        return true;
+      }
+
+      const { giftees } = getState();
+      if (giftees.loading || giftees.items.length > 0) {
+        return false;
+      }
+
+      return true;
+    },
+  },
+);
 
 const gifteesSlice = createSlice({
   name: 'giftees',

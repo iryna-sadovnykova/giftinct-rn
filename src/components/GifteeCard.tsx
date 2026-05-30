@@ -1,5 +1,5 @@
 import List from '@ant-design/react-native/lib/list';
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import {
   Image,
   ImageSourcePropType,
@@ -40,6 +40,8 @@ export type GifteeCardProps = {
   name: string;
   relationship: string;
   birthday: string;
+  /** Prefer over `avatar` — stable string for memo comparisons. */
+  avatarUrl?: string;
   avatar?: ImageSourcePropType;
   initials?: string;
   onPress?: () => void;
@@ -47,26 +49,46 @@ export type GifteeCardProps = {
   testID?: string;
 };
 
-export const GifteeCard: React.FC<GifteeCardProps> = ({
+const GifteeCardComponent: React.FC<GifteeCardProps> = ({
   name,
   relationship,
   birthday,
+  avatarUrl,
   avatar,
   initials,
   onPress,
   style,
   testID,
 }) => {
-  const fallbackInitials = initials ?? name.charAt(0).toUpperCase();
-  const thumb = avatar ? (
-    <View style={styles.avatarClip}>
-      <Image resizeMode="cover" source={avatar} style={styles.avatarImage} />
-    </View>
-  ) : (
-    <View style={[styles.avatar, styles.avatarFallback]}>
-      <Text style={styles.avatarInitials}>{fallbackInitials}</Text>
-    </View>
+  const avatarSource = useMemo(
+    () => avatar ?? (avatarUrl ? { uri: avatarUrl } : undefined),
+    [avatar, avatarUrl],
   );
+
+  const fallbackInitials = useMemo(
+    () => initials ?? name.charAt(0).toUpperCase(),
+    [initials, name],
+  );
+
+  const thumb = useMemo(() => {
+    if (avatarSource) {
+      return (
+        <View style={styles.avatarClip}>
+          <Image
+            resizeMode="cover"
+            source={avatarSource}
+            style={styles.avatarImage}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <View style={[styles.avatar, styles.avatarFallback]}>
+        <Text style={styles.avatarInitials}>{fallbackInitials}</Text>
+      </View>
+    );
+  }, [avatarSource, fallbackInitials]);
 
   const content = (
     <List styles={LIST_STYLES}>
@@ -102,6 +124,8 @@ export const GifteeCard: React.FC<GifteeCardProps> = ({
     </ScalePressable>
   );
 };
+
+export const GifteeCard = memo(GifteeCardComponent);
 
 const styles = StyleSheet.create({
   wrapper: {

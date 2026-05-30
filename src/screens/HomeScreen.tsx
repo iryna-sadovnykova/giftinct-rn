@@ -1,5 +1,5 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '@ant-design/react-native/lib/icon';
 import { ApiStateView } from '../components/ApiStateView';
 import { FadeInView } from '../components/FadeInView';
-import { GifteeCard } from '../components/GifteeCard';
+import { GifteeListItem } from '../components/GifteeListItem';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Colors } from '../constants/colors';
@@ -44,19 +44,46 @@ export const HomeScreen: React.FC<Props> = ({ navigation: tabNavigation }) => {
   );
   const previewGiftees = useMemo(() => giftees.slice(0, 4), [giftees]);
 
+  const navigateToGiftee = useCallback(
+    (gifteeId: string) => {
+      getRootNav()?.navigate('GifteeDetail', { gifteeId });
+    },
+    [getRootNav],
+  );
+
+  const navigateToFeaturedGiftIdeas = useCallback(() => {
+    if (!featured) {
+      return;
+    }
+    getRootNav()?.navigate('GifteeDetail', {
+      gifteeId: featured.id,
+      initialTab: 'ideas',
+    });
+  }, [featured, getRootNav]);
+
+  const navigateToQuiz = useCallback(() => {
+    getRootNav()?.navigate('QuizFlow');
+  }, [getRootNav]);
+
+  const navigateToGifteesTab = useCallback(() => {
+    tabNavigation.navigate('Giftees');
+  }, [tabNavigation]);
+
+  const menuButton = useMemo(
+    () => (
+      <TouchableOpacity
+        accessibilityLabel="Open menu"
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        onPress={openDrawer}>
+        <Icon color={Colors.primary} name="menu" size={24} />
+      </TouchableOpacity>
+    ),
+    [openDrawer],
+  );
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
-      <ScreenHeader
-        rightElement={
-          <TouchableOpacity
-            accessibilityLabel="Open menu"
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            onPress={openDrawer}>
-            <Icon color={Colors.primary} name="menu" size={24} />
-          </TouchableOpacity>
-        }
-        title="Giftinct"
-      />
+      <ScreenHeader rightElement={menuButton} title="Giftinct" />
       <ApiStateView
         error={error}
         loading={loading}
@@ -75,12 +102,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation: tabNavigation }) => {
                     : ''}
                 </Text>
                 <PrimaryButton
-                  onPress={() =>
-                    getRootNav()?.navigate('GifteeDetail', {
-                      gifteeId: featured.id,
-                      initialTab: 'ideas',
-                    })
-                  }
+                  onPress={navigateToFeaturedGiftIdeas}
                   style={styles.eventCta}
                   title="Find a gift"
                 />
@@ -90,31 +112,28 @@ export const HomeScreen: React.FC<Props> = ({ navigation: tabNavigation }) => {
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Giftees</Text>
-            <TouchableOpacity onPress={() => tabNavigation.navigate('Giftees')}>
+            <TouchableOpacity onPress={navigateToGifteesTab}>
               <Text style={styles.viewAll}>View All</Text>
             </TouchableOpacity>
           </View>
 
           {previewGiftees.map((giftee, index) => (
-            <FadeInView delay={80 + index * 60} duration={350} key={giftee.id}>
-              <GifteeCard
-                avatar={
-                  giftee.avatarUrl ? { uri: giftee.avatarUrl } : undefined
-                }
-                birthday={giftee.birthday}
-                initials={giftee.initials}
-                name={giftee.name}
-                onPress={() =>
-                  getRootNav()?.navigate('GifteeDetail', { gifteeId: giftee.id })
-                }
-                relationship={giftee.relationship}
-                style={styles.gifteeCard}
-              />
-            </FadeInView>
+            <GifteeListItem
+              animationDelay={80 + index * 60}
+              avatarUrl={giftee.avatarUrl}
+              birthday={giftee.birthday}
+              cardStyle={styles.gifteeCard}
+              id={giftee.id}
+              initials={giftee.initials}
+              key={giftee.id}
+              name={giftee.name}
+              onPressGiftee={navigateToGiftee}
+              relationship={giftee.relationship}
+            />
           ))}
 
           <PrimaryButton
-            onPress={() => getRootNav()?.navigate('QuizFlow')}
+            onPress={navigateToQuiz}
             style={styles.addGiftee}
             title="Add Giftee"
           />

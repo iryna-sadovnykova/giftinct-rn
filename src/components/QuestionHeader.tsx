@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { Colors } from '../constants/colors';
 import { Radius, Spacing } from '../constants/spacing';
@@ -12,16 +12,21 @@ export type QuestionHeaderProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export const QuestionHeader: React.FC<QuestionHeaderProps> = ({
+const QuestionHeaderComponent: React.FC<QuestionHeaderProps> = ({
   step,
   totalSteps,
   question,
   subtitle,
   style,
 }) => {
-  const safeTotal = Math.max(1, totalSteps);
-  const progress = Math.max(0, Math.min(1, step / safeTotal));
-  const progressPercent = `${Math.round(progress * 100)}%` as const;
+  const { progressPercent, safeTotal } = useMemo(() => {
+    const total = Math.max(1, totalSteps);
+    const progress = Math.max(0, Math.min(1, step / total));
+    return {
+      safeTotal: total,
+      progressPercent: `${Math.round(progress * 100)}%` as const,
+    };
+  }, [step, totalSteps]);
 
   return (
     <View style={[styles.container, style]}>
@@ -39,6 +44,8 @@ export const QuestionHeader: React.FC<QuestionHeaderProps> = ({
     </View>
   );
 };
+
+export const QuestionHeader = memo(QuestionHeaderComponent);
 
 const styles = StyleSheet.create({
   container: {

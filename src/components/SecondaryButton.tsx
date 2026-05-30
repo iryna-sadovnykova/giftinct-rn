@@ -1,5 +1,5 @@
 import Button from '@ant-design/react-native/lib/button';
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { Colors } from '../constants/colors';
 import { FontFamily } from '../constants/typography';
@@ -27,19 +27,28 @@ export type SecondaryButtonProps = {
   testID?: string;
 };
 
-export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
+const SecondaryButtonComponent: React.FC<SecondaryButtonProps> = ({
   title,
   onPress,
   disabled = false,
   style,
   testID,
-}) => (
-  <Button
-    disabled={disabled}
-    onPress={onPress}
-    style={StyleSheet.flatten([BUTTON_BASE_STYLE, style])}
-    styles={BUTTON_THEME_STYLES}
-    testID={testID}>
-    {title}
-  </Button>
-);
+}) => {
+  const buttonStyle = useMemo(
+    () => StyleSheet.flatten([BUTTON_BASE_STYLE, style]),
+    [style],
+  );
+
+  return (
+    <Button
+      disabled={disabled}
+      onPress={onPress}
+      style={buttonStyle}
+      styles={BUTTON_THEME_STYLES}
+      testID={testID}>
+      {title}
+    </Button>
+  );
+};
+
+export const SecondaryButton = memo(SecondaryButtonComponent);

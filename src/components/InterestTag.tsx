@@ -1,6 +1,6 @@
 import Tag from '@ant-design/react-native/lib/tag';
 import type { TagStyle } from '@ant-design/react-native/lib/tag/style';
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { Colors } from '../constants/colors';
 import { Spacing } from '../constants/spacing';
@@ -47,23 +47,31 @@ export type InterestTagProps = {
   testID?: string;
 };
 
-export const InterestTag: React.FC<InterestTagProps> = ({
+const InterestTagComponent: React.FC<InterestTagProps> = ({
   label,
   selected = false,
   onPress,
   style,
   testID,
-}) => (
-  <View style={[styles.wrapper, style]} testID={testID}>
-    <Tag
-      disabled={!onPress}
-      onChange={onPress ? () => onPress() : undefined}
-      selected={selected}
-      styles={TAG_STYLES}>
-      {label}
-    </Tag>
-  </View>
-);
+}) => {
+  const handleChange = useCallback(() => {
+    onPress?.();
+  }, [onPress]);
+
+  return (
+    <View style={[styles.wrapper, style]} testID={testID}>
+      <Tag
+        disabled={!onPress}
+        onChange={onPress ? handleChange : undefined}
+        selected={selected}
+        styles={TAG_STYLES}>
+        {label}
+      </Tag>
+    </View>
+  );
+};
+
+export const InterestTag = memo(InterestTagComponent);
 
 const styles = StyleSheet.create({
   wrapper: {

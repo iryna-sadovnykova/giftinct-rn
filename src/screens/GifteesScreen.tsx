@@ -1,10 +1,9 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApiStateView } from '../components/ApiStateView';
-import { FadeInView } from '../components/FadeInView';
-import { GifteeCard } from '../components/GifteeCard';
+import { GifteeListItem } from '../components/GifteeListItem';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Colors } from '../constants/colors';
@@ -20,6 +19,17 @@ export const GifteesScreen: React.FC<Props> = () => {
   const getRootNav = useRootNavigation();
   const { giftees, loading, error, refetch } = useGiftees();
 
+  const navigateToGiftee = useCallback(
+    (gifteeId: string) => {
+      getRootNav()?.navigate('GifteeDetail', { gifteeId });
+    },
+    [getRootNav],
+  );
+
+  const navigateToQuiz = useCallback(() => {
+    getRootNav()?.navigate('QuizFlow');
+  }, [getRootNav]);
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <ScreenHeader title="Giftees" />
@@ -30,24 +40,21 @@ export const GifteesScreen: React.FC<Props> = () => {
         onRetry={refetch}>
         <ScrollView contentContainerStyle={styles.scroll}>
           {giftees.map((giftee, index) => (
-            <FadeInView delay={index * 50} duration={350} key={giftee.id}>
-              <GifteeCard
-                avatar={
-                  giftee.avatarUrl ? { uri: giftee.avatarUrl } : undefined
-                }
-                birthday={giftee.birthday}
-                initials={giftee.initials}
-                name={giftee.name}
-                onPress={() =>
-                  getRootNav()?.navigate('GifteeDetail', { gifteeId: giftee.id })
-                }
-                relationship={giftee.relationship}
-                style={styles.card}
-              />
-            </FadeInView>
+            <GifteeListItem
+              animationDelay={index * 50}
+              avatarUrl={giftee.avatarUrl}
+              birthday={giftee.birthday}
+              cardStyle={styles.card}
+              id={giftee.id}
+              initials={giftee.initials}
+              key={giftee.id}
+              name={giftee.name}
+              onPressGiftee={navigateToGiftee}
+              relationship={giftee.relationship}
+            />
           ))}
           <PrimaryButton
-            onPress={() => getRootNav()?.navigate('QuizFlow')}
+            onPress={navigateToQuiz}
             style={styles.addButton}
             title="Add Giftee"
           />

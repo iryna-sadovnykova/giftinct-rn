@@ -20,7 +20,7 @@ export const useGiftees = () => {
   }, [dispatch]);
 
   const refetch = useCallback(() => {
-    dispatch(fetchGiftees());
+    dispatch(fetchGiftees({ force: true }));
   }, [dispatch]);
 
   return { giftees, loading, error, refetch };
@@ -38,7 +38,7 @@ export const useGiftee = (gifteeId: string) => {
   }, [dispatch]);
 
   const refetch = useCallback(() => {
-    dispatch(fetchGiftees());
+    dispatch(fetchGiftees({ force: true }));
   }, [dispatch]);
 
   return { giftee, loading, error, refetch };

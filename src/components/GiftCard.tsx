@@ -1,5 +1,5 @@
 import Card from '@ant-design/react-native/lib/card';
-import React, { useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef } from 'react';
 import {
   Image,
   ImageSourcePropType,
@@ -37,7 +37,7 @@ export type GiftCardProps = {
   testID?: string;
 };
 
-export const GiftCard: React.FC<GiftCardProps> = ({
+const GiftCardComponent: React.FC<GiftCardProps> = ({
   title,
   price,
   description,
@@ -110,6 +110,22 @@ export const GiftCard: React.FC<GiftCardProps> = ({
     </View>
   );
 };
+
+const areGiftCardPropsEqual = (
+  prev: GiftCardProps,
+  next: GiftCardProps,
+): boolean =>
+  prev.title === next.title &&
+  prev.price === next.price &&
+  prev.description === next.description &&
+  prev.ctaLabel === next.ctaLabel &&
+  prev.saved === next.saved &&
+  prev.testID === next.testID &&
+  prev.image === next.image &&
+  prev.onPressCta === next.onPressCta &&
+  prev.onPressSave === next.onPressSave;
+
+export const GiftCard = memo(GiftCardComponent, areGiftCardPropsEqual);
 
 const styles = StyleSheet.create({
   card: {

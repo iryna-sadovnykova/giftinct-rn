@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,9 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { animateLayout } from '../animations/layout';
 import { FadeInView } from '../components/FadeInView';
 import { InputField } from '../components/InputField';
-import { OptionPill } from '../components/OptionPill';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { QuestionHeader } from '../components/QuestionHeader';
+import { QuizMultiOption } from '../components/QuizMultiOption';
+import { QuizSingleOption } from '../components/QuizSingleOption';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { Spacing } from '../constants/spacing';
 import {
@@ -47,43 +48,75 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
     return Array.isArray(val) ? new Set(val) : new Set<string>();
   }, [answers, config.answerKey]);
 
-  const canProceed = config.optional || config.type === 'multi'
-    ? true
-    : config.type === 'text' || config.type === 'number'
-      ? textValue.trim().length > 0
-      : Boolean(selectedSingle);
+  const canProceed = useMemo(
+    () =>
+      config.optional || config.type === 'multi'
+        ? true
+        : config.type === 'text' || config.type === 'number'
+          ? textValue.trim().length > 0
+          : Boolean(selectedSingle),
+    [config.optional, config.type, selectedSingle, textValue],
+  );
 
-  const goNext = (nextAnswers: QuizAnswers) => {
-    if (step >= TOTAL_QUIZ_STEPS) {
-      // Quiz complete — sign up then show gift results (pass answers via params).
-      rootNav?.navigate('SignUp', { answers: nextAnswers });
-      return;
-    }
-    // Push the next step so swipe-back returns to this answer.
-    navigation.push('QuizStep', { step: step + 1, answers: nextAnswers });
-  };
+  const nextButtonTitle = useMemo(
+    () =>
+      config.ctaLabel ??
+      (step >= TOTAL_QUIZ_STEPS ? 'See the results' : 'Next'),
+    [config.ctaLabel, step],
+  );
 
-  const handleNext = () => {
+  const goNext = useCallback(
+    (nextAnswers: QuizAnswers) => {
+      if (step >= TOTAL_QUIZ_STEPS) {
+        rootNav?.navigate('SignUp', { answers: nextAnswers });
+        return;
+      }
+      navigation.push('QuizStep', { step: step + 1, answers: nextAnswers });
+    },
+    [navigation, rootNav, step],
+  );
+
+  const handleNext = useCallback(() => {
     let next = { ...answers };
     if (config.type === 'text' || config.type === 'number') {
       next = { ...next, [config.answerKey]: textValue };
     }
     goNext(next);
-  };
+  }, [answers, config.answerKey, config.type, goNext, textValue]);
 
-  const toggleMulti = (id: string) => {
-    animateLayout();
-    const current = Array.isArray(answers[config.answerKey])
-      ? [...(answers[config.answerKey] as string[])]
-      : [];
-    const idx = current.indexOf(id);
-    if (idx >= 0) {
-      current.splice(idx, 1);
-    } else {
-      current.push(id);
-    }
-    setAnswers({ ...answers, [config.answerKey]: current });
-  };
+  const handleSelectSingle = useCallback(
+    (optionId: string) => {
+      animateLayout();
+      setAnswers(prev => ({
+        ...prev,
+        [config.answerKey]: optionId,
+      }));
+    },
+    [config.answerKey],
+  );
+
+  const toggleMulti = useCallback(
+    (id: string) => {
+      animateLayout();
+      setAnswers(prev => {
+        const current = Array.isArray(prev[config.answerKey])
+          ? [...(prev[config.answerKey] as string[])]
+          : [];
+        const idx = current.indexOf(id);
+        if (idx >= 0) {
+          current.splice(idx, 1);
+        } else {
+          current.push(id);
+        }
+        return { ...prev, [config.answerKey]: current };
+      });
+    },
+    [config.answerKey],
+  );
+
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -101,18 +134,13 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
           {config.type === 'single' && config.options ? (
             <View style={styles.options}>
               {config.options.map(opt => (
-                <OptionPill
+                <QuizSingleOption
                   columns={config.columns}
                   emoji={opt.emoji}
+                  id={opt.id}
                   key={opt.id}
                   label={opt.label}
-                  onPress={() => {
-                    animateLayout();
-                    setAnswers({
-                      ...answers,
-                      [config.answerKey]: opt.id,
-                    });
-                  }}
+                  onSelect={handleSelectSingle}
                   selected={selectedSingle === opt.id}
                   style={styles.pill}
                 />
@@ -127,12 +155,13 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
                 config.columns === 1 && styles.options,
               ]}>
               {config.options.map(opt => (
-                <OptionPill
+                <QuizMultiOption
                   columns={config.columns ?? 2}
                   emoji={opt.emoji}
+                  id={opt.id}
                   key={opt.id}
                   label={opt.label}
-                  onPress={() => toggleMulti(opt.id)}
+                  onToggle={toggleMulti}
                   selected={selectedMulti.has(opt.id)}
                 />
               ))}
@@ -164,20 +193,14 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.actions}>
             {step > 1 ? (
               <View style={styles.actionHalf}>
-                <SecondaryButton
-                  onPress={() => navigation.goBack()}
-                  title="Back"
-                />
+                <SecondaryButton onPress={handleGoBack} title="Back" />
               </View>
             ) : null}
             <View style={step > 1 ? styles.actionHalf : styles.actionFull}>
               <PrimaryButton
                 disabled={!canProceed}
                 onPress={handleNext}
-                title={
-                  config.ctaLabel ??
-                  (step >= TOTAL_QUIZ_STEPS ? 'See the results' : 'Next')
-                }
+                title={nextButtonTitle}
               />
             </View>
           </View>

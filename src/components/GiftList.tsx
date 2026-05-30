@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import {
   FlatList,
   ListRenderItem,
@@ -8,8 +8,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Spacing } from '../constants/spacing';
-import { FadeInView } from './FadeInView';
-import { GiftCard, GiftCardProps } from './GiftCard';
+import { GiftListRow } from './GiftListRow';
+import { GiftCardProps } from './GiftCard';
 
 export type GiftListItem = Omit<GiftCardProps, 'onPressCta' | 'onPressSave'> & {
   id: string;
@@ -26,7 +26,7 @@ export type GiftListProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export const GiftList: React.FC<GiftListProps> = ({
+const GiftListComponent: React.FC<GiftListProps> = ({
   data,
   onPressGift,
   onSaveGift,
@@ -37,15 +37,23 @@ export const GiftList: React.FC<GiftListProps> = ({
 }) => {
   const renderItem: ListRenderItem<GiftListItem> = useCallback(
     ({ item, index }) => (
-      <FadeInView delay={index * 60} duration={350}>
-        <GiftCard
-          {...item}
-          onPressCta={() => onPressGift(item)}
-          onPressSave={onSaveGift ? () => onSaveGift(item) : undefined}
-        />
-      </FadeInView>
+      <GiftListRow
+        index={index}
+        item={item}
+        onPressGift={onPressGift}
+        onSaveGift={onSaveGift}
+      />
     ),
     [onPressGift, onSaveGift],
+  );
+
+  const contentContainerStyle = useMemo(
+    () => [
+      styles.content,
+      { padding: contentPadding },
+      data.length === 0 && styles.contentEmpty,
+    ],
+    [contentPadding, data.length],
   );
 
   return (
@@ -53,11 +61,7 @@ export const GiftList: React.FC<GiftListProps> = ({
       ItemSeparatorComponent={Separator}
       ListEmptyComponent={ListEmptyComponent}
       ListHeaderComponent={ListHeaderComponent}
-      contentContainerStyle={[
-        styles.content,
-        { padding: contentPadding },
-        data.length === 0 && styles.contentEmpty,
-      ]}
+      contentContainerStyle={contentContainerStyle}
       data={data}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
@@ -67,9 +71,13 @@ export const GiftList: React.FC<GiftListProps> = ({
   );
 };
 
+export const GiftList = memo(GiftListComponent);
+
 const keyExtractor = (item: GiftListItem) => item.id;
 
-const Separator: React.FC = () => <View style={styles.separator} />;
+const Separator = memo(function Separator() {
+  return <View style={styles.separator} />;
+});
 
 const styles = StyleSheet.create({
   list: {

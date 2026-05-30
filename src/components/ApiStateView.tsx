@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { memo, useEffect } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -24,7 +24,7 @@ type ApiStateViewProps = {
 
 type ViewMode = 'loading' | 'error' | 'content';
 
-export const ApiStateView: React.FC<ApiStateViewProps> = ({
+const ApiStateViewComponent: React.FC<ApiStateViewProps> = ({
   loading,
   error,
   loadingMessage = 'Loading...',
@@ -32,9 +32,10 @@ export const ApiStateView: React.FC<ApiStateViewProps> = ({
   children,
 }) => {
   const mode: ViewMode = loading ? 'loading' : error ? 'error' : 'content';
-  const opacity = useSharedValue(mode === 'content' ? 1 : 0);
+  const opacity = useSharedValue(1);
 
   useEffect(() => {
+    opacity.value = 0;
     opacity.value = withTiming(1, { duration: 280 });
   }, [mode, opacity]);
 
@@ -68,6 +69,8 @@ export const ApiStateView: React.FC<ApiStateViewProps> = ({
     <Animated.View style={[styles.content, animatedStyle]}>{children}</Animated.View>
   );
 };
+
+export const ApiStateView = memo(ApiStateViewComponent);
 
 const styles = StyleSheet.create({
   content: {

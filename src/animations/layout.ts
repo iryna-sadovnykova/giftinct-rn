@@ -1,13 +1,10 @@
-import { LayoutAnimation, Platform, UIManager } from 'react-native';
+import { LayoutAnimation } from 'react-native';
 
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-/** Cross-fade / ease layout changes (tab switches, list updates). */
+/**
+ * Cross-fade / ease layout changes (tab switches, list updates).
+ * New Architecture does not support UIManager.setLayoutAnimationEnabledExperimental;
+ * configureNext uses the Fabric layout animation path instead.
+ */
 export const animateLayout = () => {
   LayoutAnimation.configureNext(
     LayoutAnimation.create(

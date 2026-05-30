@@ -1,9 +1,9 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApiStateView } from '../components/ApiStateView';
-import { GiftList } from '../components/GiftList';
+import { GiftList, GiftListItem } from '../components/GiftList';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Colors } from '../constants/colors';
@@ -35,6 +35,8 @@ export const GiftResultsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   }, [gifts]);
 
+  const headerTitle = useMemo(() => giftResultsTitle(answers), [answers]);
+
   const listData = useMemo(
     () =>
       gifts.map(item => ({
@@ -44,39 +46,54 @@ export const GiftResultsScreen: React.FC<Props> = ({ navigation, route }) => {
     [gifts, savedIds],
   );
 
+  const listHeader = useMemo(
+    () => <Text style={styles.header}>{headerTitle}</Text>,
+    [headerTitle],
+  );
+
+  const handlePressGift = useCallback((item: GiftListItem) => {
+    if (item.ctaUrl) {
+      openExternalUrl(item.ctaUrl);
+    }
+  }, []);
+
+  const handleSaveGift = useCallback((item: GiftListItem) => {
+    setSavedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(item.id)) {
+        next.delete(item.id);
+      } else {
+        next.add(item.id);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleSaveGiftee = useCallback(() => {
+    navigation.navigate('Main');
+  }, [navigation]);
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
-      <ScreenHeader onBack={() => navigation.goBack()} title="Gift ideas" />
+      <ScreenHeader onBack={handleGoBack} title="Gift ideas" />
       <ApiStateView
         error={error}
         loading={loading}
         loadingMessage="Loading gift ideas..."
         onRetry={refetch}>
         <GiftList
-          ListHeaderComponent={
-            <Text style={styles.header}>{giftResultsTitle(answers)}</Text>
-          }
+          ListHeaderComponent={listHeader}
           data={listData}
-          onPressGift={item => {
-            if (item.ctaUrl) {
-              openExternalUrl(item.ctaUrl);
-            }
-          }}
-          onSaveGift={item =>
-            setSavedIds(prev => {
-              const next = new Set(prev);
-              if (next.has(item.id)) {
-                next.delete(item.id);
-              } else {
-                next.add(item.id);
-              }
-              return next;
-            })
-          }
+          onPressGift={handlePressGift}
+          onSaveGift={handleSaveGift}
           style={styles.list}
         />
         <PrimaryButton
-          onPress={() => navigation.navigate('Main')}
+          onPress={handleSaveGiftee}
           style={styles.saveGiftee}
           title="Save giftee"
         />
