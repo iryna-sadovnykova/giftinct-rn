@@ -9,26 +9,27 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { Colors } from '../constants/colors';
 import { Spacing } from '../constants/spacing';
 import { useGiftees } from '../hooks/useGiftees';
-import { useRootNavigation } from '../navigation/hooks';
+import { useNavigateGifteeDetail, useNavigateQuizFlow } from '../navigation/hooks';
 import { MainTabParamList } from '../navigation/types';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Giftees'>;
 
 /** Giftees tab — full list loaded from the Mockaroo API. */
 export const GifteesScreen: React.FC<Props> = () => {
-  const getRootNav = useRootNavigation();
+  const navigateGifteeDetail = useNavigateGifteeDetail();
+  const navigateQuizFlow = useNavigateQuizFlow();
   const { giftees, loading, error, refetch } = useGiftees();
 
   const navigateToGiftee = useCallback(
     (gifteeId: string) => {
-      getRootNav()?.navigate('GifteeDetail', { gifteeId });
+      navigateGifteeDetail({ gifteeId });
     },
-    [getRootNav],
+    [navigateGifteeDetail],
   );
 
   const navigateToQuiz = useCallback(() => {
-    getRootNav()?.navigate('QuizFlow');
-  }, [getRootNav]);
+    navigateQuizFlow();
+  }, [navigateQuizFlow]);
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>

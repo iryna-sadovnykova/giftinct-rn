@@ -21,6 +21,7 @@ import { Colors } from '../constants/colors';
 import { Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
 import { useAuth } from '../context/AuthContext';
+import { openGiftResults } from '../navigation/rootNavigation';
 import { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
@@ -36,7 +37,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const navigateAfterAuth = () => {
     if (answers) {
-      navigation.navigate('GiftResults', { answers });
+      openGiftResults(navigation, answers);
     } else {
       navigation.navigate('Main');
     }

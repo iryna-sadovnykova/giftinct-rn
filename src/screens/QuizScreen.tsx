@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -35,6 +35,13 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
   const [textValue, setTextValue] = useState(
     String(initialAnswers[config.answerKey] ?? ''),
   );
+
+  useEffect(() => {
+    const { step: routeStep, answers: routeAnswers } = route.params;
+    const stepConfig = getQuizStep(routeStep)!;
+    setAnswers(routeAnswers);
+    setTextValue(String(routeAnswers[stepConfig.answerKey] ?? ''));
+  }, [route.params]);
 
   const rootNav = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
 

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApiStateView } from '../components/ApiStateView';
+import { FadeInView } from '../components/FadeInView';
 import { GiftList, GiftListItem } from '../components/GiftList';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -21,10 +22,15 @@ type Props = NativeStackScreenProps<RootStackParamList, 'GiftResults'>;
  * to personalise the list header.
  */
 export const GiftResultsScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { answers } = route.params;
+  const { answers, gifteeName } = route.params;
   const { gifts, loading, error, refetch } = useGifts();
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const savedInitialized = useRef(false);
+
+  useEffect(() => {
+    savedInitialized.current = false;
+    setSavedIds(new Set());
+  }, [answers]);
 
   useEffect(() => {
     if (!savedInitialized.current && gifts.length > 0) {
@@ -35,7 +41,10 @@ export const GiftResultsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   }, [gifts]);
 
-  const headerTitle = useMemo(() => giftResultsTitle(answers), [answers]);
+  const headerTitle = useMemo(
+    () => giftResultsTitle(answers, gifteeName),
+    [answers, gifteeName],
+  );
 
   const listData = useMemo(
     () =>
@@ -85,18 +94,20 @@ export const GiftResultsScreen: React.FC<Props> = ({ navigation, route }) => {
         loading={loading}
         loadingMessage="Loading gift ideas..."
         onRetry={refetch}>
-        <GiftList
-          ListHeaderComponent={listHeader}
-          data={listData}
-          onPressGift={handlePressGift}
-          onSaveGift={handleSaveGift}
-          style={styles.list}
-        />
-        <PrimaryButton
-          onPress={handleSaveGiftee}
-          style={styles.saveGiftee}
-          title="Save giftee"
-        />
+        <FadeInView animationKey={headerTitle} duration={320} style={styles.listPane}>
+          <GiftList
+            ListHeaderComponent={listHeader}
+            data={listData}
+            onPressGift={handlePressGift}
+            onSaveGift={handleSaveGift}
+            style={styles.list}
+          />
+          <PrimaryButton
+            onPress={handleSaveGiftee}
+            style={styles.saveGiftee}
+            title="Save giftee"
+          />
+        </FadeInView>
       </ApiStateView>
     </SafeAreaView>
   );
@@ -108,6 +119,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   list: {
+    flex: 1,
+  },
+  listPane: {
     flex: 1,
   },
   header: {

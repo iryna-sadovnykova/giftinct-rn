@@ -18,7 +18,11 @@ import { Colors } from '../constants/colors';
 import { Radius, Spacing } from '../constants/spacing';
 import { FontFamily, FontSize } from '../constants/typography';
 import { useGiftees } from '../hooks/useGiftees';
-import { useOpenDrawer, useRootNavigation } from '../navigation/hooks';
+import {
+  useNavigateGifteeDetail,
+  useNavigateQuizFlow,
+  useOpenDrawer,
+} from '../navigation/hooks';
 import { MainTabParamList } from '../navigation/types';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Home'>;
@@ -34,7 +38,8 @@ const sortByUpcomingBirthday = <T extends { daysUntilBirthday?: number }>(
 
 /** Home tab — next event card, giftee preview list, find-a-gift CTA. */
 export const HomeScreen: React.FC<Props> = ({ navigation: tabNavigation }) => {
-  const getRootNav = useRootNavigation();
+  const navigateGifteeDetail = useNavigateGifteeDetail();
+  const navigateQuizFlow = useNavigateQuizFlow();
   const openDrawer = useOpenDrawer();
   const { giftees, loading, error, refetch } = useGiftees();
 
@@ -46,24 +51,24 @@ export const HomeScreen: React.FC<Props> = ({ navigation: tabNavigation }) => {
 
   const navigateToGiftee = useCallback(
     (gifteeId: string) => {
-      getRootNav()?.navigate('GifteeDetail', { gifteeId });
+      navigateGifteeDetail({ gifteeId });
     },
-    [getRootNav],
+    [navigateGifteeDetail],
   );
 
   const navigateToFeaturedGiftIdeas = useCallback(() => {
     if (!featured) {
       return;
     }
-    getRootNav()?.navigate('GifteeDetail', {
+    navigateGifteeDetail({
       gifteeId: featured.id,
       initialTab: 'ideas',
     });
-  }, [featured, getRootNav]);
+  }, [featured, navigateGifteeDetail]);
 
   const navigateToQuiz = useCallback(() => {
-    getRootNav()?.navigate('QuizFlow');
-  }, [getRootNav]);
+    navigateQuizFlow();
+  }, [navigateQuizFlow]);
 
   const navigateToGifteesTab = useCallback(() => {
     tabNavigation.navigate('Giftees');

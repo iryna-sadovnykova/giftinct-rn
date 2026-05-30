@@ -10,7 +10,10 @@ import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { MainDrawerNavigator } from './MainDrawerNavigator';
 import {
   authStackScreenOptions,
+  detailStackScreenOptions,
   modalStackScreenOptions,
+  quizFlowScreenOptions,
+  resultsStackScreenOptions,
   stackScreenOptions,
 } from './screenOptions';
 import { QuizStackNavigator } from './QuizStackNavigator';
@@ -43,7 +46,7 @@ export const RootNavigator: React.FC = () => (
     <Stack.Screen
       component={QuizStackNavigator}
       name="QuizFlow"
-      options={{ gestureEnabled: true }}
+      options={quizFlowScreenOptions}
     />
 
     {/* Main app — drawer + bottom tabs */}
@@ -54,10 +57,20 @@ export const RootNavigator: React.FC = () => (
     />
 
     {/* Post-quiz gift results */}
-    <Stack.Screen component={GiftResultsScreen} name="GiftResults" />
+    <Stack.Screen
+      component={GiftResultsScreen}
+      getId={({ params }) => JSON.stringify(params.answers)}
+      name="GiftResults"
+      options={resultsStackScreenOptions}
+    />
 
     {/* Giftee profile with Profile / Saved / Ideas tabs */}
-    <Stack.Screen component={GifteeDetailScreen} name="GifteeDetail" />
+    <Stack.Screen
+      component={GifteeDetailScreen}
+      getId={({ params }) => params.gifteeId}
+      name="GifteeDetail"
+      options={detailStackScreenOptions}
+    />
 
     {/* Premium checkout flow */}
     <Stack.Screen

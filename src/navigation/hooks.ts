@@ -1,7 +1,13 @@
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback } from 'react';
-import { RootStackParamList } from './types';
+import {
+  GifteeDetailParams,
+  openGifteeDetail,
+  openGiftResults,
+  openQuizFlow,
+} from './rootNavigation';
+import { QuizAnswers, RootStackParamList } from './types';
 
 type NavRef = { getParent: () => NavRef | undefined };
 
@@ -31,4 +37,43 @@ export const useOpenDrawer = () => {
   return useCallback(() => {
     navigation.getParent()?.dispatch(DrawerActions.openDrawer());
   }, [navigation]);
+};
+
+/** Typed helper — list / calendar / home → giftee detail with params preserved. */
+export const useNavigateGifteeDetail = () => {
+  const getRootNav = useRootNavigation();
+  return useCallback(
+    (params: GifteeDetailParams) => {
+      const nav = getRootNav();
+      if (nav) {
+        openGifteeDetail(nav, params);
+      }
+    },
+    [getRootNav],
+  );
+};
+
+/** Typed helper — sign-up / quiz completion → gift results. */
+export const useNavigateGiftResults = () => {
+  const getRootNav = useRootNavigation();
+  return useCallback(
+    (answers: QuizAnswers) => {
+      const nav = getRootNav();
+      if (nav) {
+        openGiftResults(nav, answers);
+      }
+    },
+    [getRootNav],
+  );
+};
+
+/** Typed helper — start the gift-finder quiz from tabs or welcome. */
+export const useNavigateQuizFlow = () => {
+  const getRootNav = useRootNavigation();
+  return useCallback(() => {
+    const nav = getRootNav();
+    if (nav) {
+      openQuizFlow(nav);
+    }
+  }, [getRootNav]);
 };

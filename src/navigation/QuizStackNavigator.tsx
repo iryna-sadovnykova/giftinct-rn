@@ -14,8 +14,10 @@ export const QuizStackNavigator: React.FC = () => (
   <Stack.Navigator screenOptions={stackScreenOptions}>
     <Stack.Screen
       component={QuizScreen}
+      getId={({ params }) => String(params.step)}
       initialParams={{ step: 1, answers: {} }}
       name="QuizStep"
+      options={{ animationDuration: 280 }}
     />
   </Stack.Navigator>
 );
