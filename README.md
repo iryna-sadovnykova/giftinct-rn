@@ -4,7 +4,7 @@ React Native app for managing giftees and gift recommendations.
 
 ## Preview
 
-![App animation](./assets/screenshots/animation.gif)
+![App animation](./assets/screenshots/output.gif)
 
 ## Bundle analysis
 
